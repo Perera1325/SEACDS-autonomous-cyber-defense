@@ -1,5 +1,5 @@
 # response_loop.py
-# Observe → Infer → Respond → Evaluate loop
+# Observe → Infer → Respond → Evaluate → Evolve loop
 
 from analysis.log_parser import parse_log, group_by_pid
 from analysis.intent_signals import extract_intent_signals
@@ -7,6 +7,7 @@ from evolution_engine.population import DefensePopulation
 from response_engine.defense_trigger import should_trigger_defense
 from response_engine.defense_executor import execute_defense
 from feedback_engine.fitness_evaluator import evaluate_defense
+from persistence_engine.genome_store import load_population, save_population
 
 
 def run_response_cycle(log_file):
@@ -14,7 +15,8 @@ def run_response_cycle(log_file):
     grouped = group_by_pid(records)
     intent_map = extract_intent_signals(grouped)
 
-    population = DefensePopulation(size=5)
+    stored = load_population()
+    population = DefensePopulation(size=5, genomes=stored)
     population.initialize()
 
     for pid, intent in intent_map.items():
@@ -32,6 +34,10 @@ def run_response_cycle(log_file):
             print(
                 f"[DEFENSE] PID {pid} → {actions} | fitness={genome.fitness:.2f}"
             )
+
+    survivors = population.select_top()
+    population.reproduce(survivors)
+    save_population(population.get_population())
 
 
 if __name__ == "__main__":
