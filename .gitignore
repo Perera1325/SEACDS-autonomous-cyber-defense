@@ -1,4 +1,7 @@
 *.log
 __pycache__/
 experiments/results.csv
+*.png
+*.jpg
+
 
